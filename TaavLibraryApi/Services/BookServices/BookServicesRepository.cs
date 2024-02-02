@@ -90,10 +90,10 @@ namespace TaavLibraryApi.Services.BookServices
         }
         public List<FindBooksDto>? FindBooks(string? bookName, string? authorName, string? categoryName)
         {
-            var foundList = new List<FindBooksDto>();
+            var foundBooks = new List<FindBooksDto>();
             if (!string.IsNullOrWhiteSpace(bookName))
             {
-                foundList = _db.Set<Book>().Include(_ => _.Author).Include(_ => _.Category)
+                foundBooks = _db.Set<Book>().Include(_ => _.Author).Include(_ => _.Category)
                     .Where(_ => _.Name.ToLower().Contains(bookName!.ToLower()))
                     .Select(_ => new FindBooksDto
                     {
@@ -107,13 +107,43 @@ namespace TaavLibraryApi.Services.BookServices
             }
             if (!string.IsNullOrWhiteSpace(categoryName))
             {
-                foundList = foundList?.Where(_ => _.Category.ToLower().Contains(categoryName!.ToLower())).ToList();
+                foundBooks = foundBooks?.Where(_ => _.Category.ToLower().Contains(categoryName!.ToLower())).ToList();
             }
             if (!string.IsNullOrWhiteSpace(authorName))
             {
-                foundList = foundList?.Where(_ => _.Author.ToLower().Contains(authorName!.ToLower())).ToList();
+                foundBooks = foundBooks?.Where(_ => _.Author.ToLower().Contains(authorName!.ToLower())).ToList();
             }
-            return foundList;
+            if (foundBooks is not null)
+            {
+                foreach (var book in foundBooks)
+                {
+                    var rentCount = _db.Set<UserBook>()
+                .Where(_ => _.BookId == book.Id && _.RentStatus == RentStatus.Rent).Count();
+                    book.RentCount = rentCount;
+                }
+            }
+            return foundBooks;
+        }
+        public FindBooksDto FindBookById(int id)
+        {
+            var book = _db.Set<Book>().Include(_ => _.Author).Include(_ => _.Category)
+                .FirstOrDefault(_ => _.Id == id);
+            if (book is null)
+            {
+                throw new InvalidOperationException("Book was not found");
+            }
+            var rentCount = _db.Set<UserBook>()
+                .Where(_ => _.BookId == book.Id && _.RentStatus == RentStatus.Rent).Count();
+            return new FindBooksDto
+            {
+                Name = book.Name,
+                Id = book.Id,
+                PublishDate = book.PublishDate,
+                Count = book.Count,
+                Author = book.Author.FullName,
+                Category = book.Category.Name,
+                RentCount = rentCount
+            };
         }
     }
 }

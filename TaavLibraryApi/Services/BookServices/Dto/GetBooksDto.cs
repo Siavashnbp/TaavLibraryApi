@@ -7,5 +7,6 @@
         public string Author { get; set; }
         public DateTime PublishDate { get; set; }
         public string Category { get; set; }
+        public int RentCount { get; set; }
     }
 }
