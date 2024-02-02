@@ -9,10 +9,10 @@ namespace TaavLibraryApi.Controllers
     [Route("api/[controller]")]
     public class BookController : ControllerBase
     {
-        private readonly BookServices _bookServices;
+        private readonly BookServicesRepository _bookServices;
         public BookController(LibraryDbContext dbContext)
         {
-            _bookServices = new BookServices(dbContext);
+            _bookServices = new BookServicesRepository(dbContext);
         }
 
         [HttpPost("add")]
@@ -36,9 +36,10 @@ namespace TaavLibraryApi.Controllers
             return _bookServices.GetBooks();
         }
         [HttpGet("find-book")]
-        public List<FindBooksDto> FindBooks([FromQuery] string? name)
+        public List<FindBooksDto> FindBooks([FromQuery] string? bookName, [FromQuery] string? authorName
+            , [FromQuery] string? categoryName)
         {
-            return _bookServices.FindBooks(name);
+            return _bookServices.FindBooks(bookName, authorName, categoryName);
         }
     }
 }
